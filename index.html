@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NexChat 💬</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ─── RESET & VARS ─── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f0f17;--bg2:#13131f;--bg3:#181826;
+  --card:#1d1d2e;--card2:#232336;--card3:#2a2a40;
+  --pri:#6c63ff;--pri2:#5a52e8;--pri-dim:rgba(108,99,255,.14);
+  --sec:#3ecfcf;--acc:#ff6b9d;--grn:#2dd55b;
+  --txt:#e6e4f0;--muted:#7875a0;--dim:#32304a;
+  --bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.12);
+  --shadow:0 16px 48px rgba(0,0,0,.5);
+  --r:12px;--r2:20px;
+  --f:'Plus Jakarta Sans',sans-serif;--m:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;font-family:var(--f);background:var(--bg);color:var(--txt);font-size:14px}
+button{cursor:pointer;font-family:var(--f)}
+input,textarea{font-family:var(--f)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+
+/* ─── SCREENS ─── */
+.screen{position:fixed;inset:0;z-index:10}
+.screen.off{display:none}
+
+/* ══════════════════════════════
+   AUTH
+══════════════════════════════ */
+#authScreen{
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem;overflow-y:auto;
+  background:radial-gradient(ellipse 80% 60% at 15% 10%,rgba(108,99,255,.18) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 50% at 85% 90%,rgba(62,207,207,.12) 0%,transparent 60%),
+             var(--bg);
+}
+/* animated blobs */
+#authScreen::before,#authScreen::after{
+  content:'';position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;animation:blob 14s ease-in-out infinite;
+}
+#authScreen::before{width:500px;height:500px;background:rgba(108,99,255,.1);top:-150px;left:-150px}
+#authScreen::after{width:400px;height:400px;background:rgba(62,207,207,.07);bottom:-120px;right:-100px;animation-delay:-7s}
+@keyframes blob{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(25px,-15px) scale(1.06)}70%{transform:translate(-15px,20px) scale(.95)}}
+
+.auth-box{
+  position:relative;z-index:1;width:100%;max-width:430px;
+  background:rgba(19,19,31,.9);backdrop-filter:blur(28px);
+  border:1px solid var(--bdr2);border-radius:24px;
+  padding:2.5rem;box-shadow:var(--shadow),0 0 0 1px rgba(108,99,255,.08);
+}
+/* logo */
+.logo{display:flex;align-items:center;gap:.6rem;margin-bottom:2rem}
+.logo-mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--pri),var(--sec));display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.logo-name{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--pri),var(--sec));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* panels */
+.panel{display:none}.panel.on{display:block}
+
+/* welcome panel */
+.welcome-title{font-size:2.3rem;font-weight:800;line-height:1.15;letter-spacing:-.03em;margin-bottom:.9rem}
+.welcome-title em{font-style:normal;background:linear-gradient(135deg,var(--pri),var(--sec));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.welcome-desc{color:var(--muted);font-size:.875rem;line-height:1.65;margin-bottom:2rem}
+.btn-row{display:flex;flex-direction:column;gap:.65rem}
+
+/* buttons */
+.btn-pri{width:100%;padding:.85rem 1.5rem;background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;border-radius:var(--r);color:#fff;font-weight:700;font-size:.875rem;letter-spacing:.01em;transition:transform .18s,box-shadow .18s}
+.btn-pri:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,99,255,.4)}
+.btn-out{width:100%;padding:.85rem 1.5rem;background:transparent;border:1px solid var(--bdr2);border-radius:var(--r);color:var(--txt);font-weight:600;font-size:.875rem;transition:border-color .18s,color .18s}
+.btn-out:hover{border-color:var(--pri);color:var(--pri)}
+.btn-sm{padding:.55rem 1.1rem;border-radius:var(--r);font-size:.78rem;font-weight:600}
+
+/* member preview */
+.members-preview{margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--bdr)}
+.members-preview .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem}
+.member-chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.mchip{display:flex;align-items:center;gap:.4rem;padding:.3rem .7rem;background:var(--card);border:1px solid var(--bdr);border-radius:50px}
+.mchip-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem}
+.mchip-name{font-size:.7rem;color:var(--muted)}
+
+/* form */
+.form-title{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.25rem}
+.form-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.75rem}
+.fgroup{margin-bottom:1rem}
+.fgroup label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.4rem}
+.fgroup input{width:100%;padding:.72rem 1rem;background:var(--card2);border:1px solid var(--bdr);border-radius:var(--r);color:var(--txt);font-size:.875rem;outline:none;transition:border-color .18s,box-shadow .18s}
+.fgroup input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+.fgroup input::placeholder{color:var(--dim)}
+.pfx-wrap{display:flex;align-items:center;background:var(--card2);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;transition:border-color .18s}
+.pfx-wrap:focus-within{border-color:var(--pri);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+.pfx{padding:0 .5rem 0 .9rem;color:var(--pri);font-weight:700;font-size:.95rem}
+.pfx-wrap input{background:transparent;border:none;box-shadow:none;padding-left:0}
+.pfx-wrap input:focus{box-shadow:none}
+.ferr{background:rgba(255,107,157,.1);border:1px solid rgba(255,107,157,.3);color:var(--acc);font-size:.76rem;padding:.55rem .85rem;border-radius:8px;margin-bottom:.75rem;display:none}
+.ferr.on{display:block}
+.fswitch{text-align:center;font-size:.8rem;color:var(--muted);margin-top:.9rem}
+.fswitch a{color:var(--pri);cursor:pointer;font-weight:700}
+
+/* avatar picker */
+.av-picker{text-align:center;margin-bottom:1.25rem}
+.av-prev{width:68px;height:68px;border-radius:50%;margin:0 auto .5rem;display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:3px solid var(--pri);transition:all .2s}
+.av-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;max-height:76px;overflow-y:auto}
+.eg-item{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;background:var(--card2);border:1px solid var(--bdr);transition:all .15s}
+.eg-item:hover,.eg-item.sel{background:var(--pri-dim);border-color:var(--pri);transform:scale(1.12)}
+.color-row{margin-bottom:1.25rem}
+.color-row .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.5rem}
+.cdots{display:flex;gap:.45rem}
+.cdot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
+.cdot.sel{transform:scale(1.2);border-color:#fff}
+
+/* quick login */
+.qlogin{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--bdr)}
+.qlogin .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem}
+.ql-btn{display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;background:var(--card2);border:1px solid var(--bdr);border-radius:var(--r);cursor:pointer;width:100%;margin-bottom:.4rem;transition:border-color .18s;color:var(--txt)}
+.ql-btn:hover{border-color:var(--pri)}
+.ql-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.ql-name{font-size:.8rem;font-weight:700;text-align:left}
+.ql-user{font-size:.7rem;color:var(--muted)}
+
+/* ══════════════════════════════
+   APP
+══════════════════════════════ */
+#appScreen{display:flex;height:100vh;overflow:hidden}
+#appScreen.off{display:none}
+
+/* SIDEBAR */
+.sidebar{
+  width:320px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--bg2);border-right:1px solid var(--bdr);
+  height:100vh;overflow:hidden;
+  transition:transform .3s;
+}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.sb-me{display:flex;align-items:center;gap:.65rem;cursor:pointer;flex:1;min-width:0}
+.sb-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.sb-info{min-width:0}
+.sb-name{font-weight:700;font-size:.85rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-bio{font-size:.7rem;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-acts{display:flex;gap:.2rem}
+.ib{width:34px;height:34px;border-radius:8px;background:transparent;border:none;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}
+.ib svg{width:17px;height:17px}
+.ib:hover{background:var(--card);color:var(--txt)}
+
+.sb-search{display:flex;align-items:center;gap:.5rem;margin:.65rem .9rem;padding:.55rem .9rem;background:var(--card);border-radius:50px;border:1px solid var(--bdr);flex-shrink:0}
+.sb-search svg{width:14px;height:14px;color:var(--muted);flex-shrink:0}
+.sb-search input{flex:1;background:transparent;border:none;outline:none;font-size:.8rem;color:var(--txt)}
+.sb-search input::placeholder{color:var(--dim)}
+
+.sb-tabs{display:flex;gap:.3rem;padding:0 .9rem .6rem;flex-shrink:0}
+.stab{flex:1;padding:.38rem;border:none;border-radius:8px;background:transparent;color:var(--muted);font-size:.72rem;font-weight:700;cursor:pointer;transition:all .15s}
+.stab.on{background:var(--pri-dim);color:var(--pri)}
+.stab:hover:not(.on){background:var(--card)}
+
+.chat-list{flex:1;overflow-y:auto}
+.ci{display:flex;align-items:center;gap:.75rem;padding:.8rem 1rem;cursor:pointer;border-bottom:1px solid var(--bdr);transition:background .12s;position:relative}
+.ci:hover{background:var(--card)}
+.ci.on{background:var(--pri-dim)}
+.ci-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;position:relative}
+.ci-av .dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--grn);border:2px solid var(--bg2)}
+.ci-body{flex:1;min-width:0}
+.ci-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.18rem}
+.ci-name{font-weight:700;font-size:.845rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
+.ci-time{font-size:.65rem;color:var(--muted);flex-shrink:0}
+.ci-prev{font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ubadge{background:var(--pri);color:#fff;font-size:.6rem;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;float:right;margin-top:2px}
+.ai-tag{font-size:.58rem;background:rgba(62,207,207,.15);color:var(--sec);padding:.1rem .4rem;border-radius:4px;margin-left:.3rem;vertical-align:middle}
+
+/* CHAT AREA */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative}
+
+/* empty */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:1rem;text-align:center;padding:2rem}
+.empty-icon{font-size:4rem;margin-bottom:.5rem}
+.empty h3{font-size:1.35rem;font-weight:700}
+.empty p{color:var(--muted);font-size:.85rem;line-height:1.6;max-width:260px}
+
+/* active chat */
+.a-chat{flex:1;display:flex;flex-direction:column;height:100%;overflow:hidden}
+
+/* topbar */
+.topbar{display:flex;align-items:center;gap:.75rem;padding:.8rem 1.1rem;background:var(--bg2);border-bottom:1px solid var(--bdr);flex-shrink:0}
+.back-btn{width:30px;height:30px;border:none;background:transparent;color:var(--muted);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;display:none}
+.back-btn svg{width:20px;height:20px}
+.tb-info{display:flex;align-items:center;gap:.7rem;flex:1;cursor:pointer}
+.tb-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0}
+.tb-name{font-weight:700;font-size:.875rem}
+.tb-sub{font-size:.68rem;color:var(--muted)}
+.tb-acts{display:flex;gap:.2rem}
+
+/* messages */
+.msgs{
+  flex:1;overflow-y:auto;padding:1.25rem 1rem;
+  display:flex;flex-direction:column;gap:.2rem;
+  background:radial-gradient(ellipse 60% 50% at 10% 10%,rgba(108,99,255,.03) 0%,transparent 50%),
+             radial-gradient(ellipse 60% 50% at 90% 90%,rgba(62,207,207,.03) 0%,transparent 50%),
+             var(--bg);
+}
+.date-div{text-align:center;margin:.6rem 0}
+.date-div span{font-size:.66rem;background:var(--card);color:var(--muted);padding:.25rem .8rem;border-radius:50px}
+.msg-row{display:flex;align-items:flex-end;gap:.4rem;margin-bottom:.15rem}
+.msg-row.out{flex-direction:row-reverse}
+.msg-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0}
+.bubble{max-width:68%;padding:.65rem .9rem;border-radius:16px;font-size:.845rem;line-height:1.55;word-break:break-word;position:relative}
+.bubble.in{background:var(--card2);border-bottom-left-radius:3px;color:var(--txt)}
+.bubble.out{background:linear-gradient(135deg,#6c63ff,#5a52e8);border-bottom-right-radius:3px;color:#fff}
+.bubble.ai{background:linear-gradient(135deg,rgba(62,207,207,.12),rgba(62,207,207,.06));border:1px solid rgba(62,207,207,.18);border-bottom-left-radius:3px;color:var(--txt)}
+.bmeta{display:flex;align-items:center;justify-content:flex-end;gap:.35rem;margin-top:.3rem}
+.btime{font-size:.6rem;opacity:.6}
+.btick{font-size:.65rem;opacity:.6}
+.bsender{font-size:.65rem;font-weight:700;color:var(--sec);margin-bottom:.15rem}
+
+/* typing */
+.typing-row{display:flex;align-items:flex-end;gap:.4rem}
+.tbubble{background:var(--card2);border:1px solid rgba(62,207,207,.2);border-radius:16px;border-bottom-left-radius:3px;padding:.6rem .85rem;display:flex;gap:4px;align-items:center}
+.td{width:6px;height:6px;border-radius:50%;background:var(--sec);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-7px);opacity:1}}
+
+/* input bar */
+.ibar{display:flex;align-items:flex-end;gap:.5rem;padding:.75rem 1rem;background:var(--bg2);border-top:1px solid var(--bdr);flex-shrink:0;position:relative}
+.emoji-wrap{position:relative}
+.emoji-tog{width:36px;height:36px;border-radius:10px;border:none;background:transparent;font-size:1.05rem;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:background .15s}
+.emoji-tog:hover{background:var(--card)}
+.epicker{position:absolute;bottom:calc(100% + 8px);left:0;background:var(--card);border:1px solid var(--bdr2);border-radius:var(--r);padding:.65rem;z-index:50;display:flex;flex-wrap:wrap;gap:.25rem;width:228px;max-height:160px;overflow-y:auto;box-shadow:var(--shadow);display:none}
+.epicker.on{display:flex}
+.ep{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;border-radius:7px;transition:background .12s}
+.ep:hover{background:var(--card2)}
+.msg-wrap{flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.6rem .9rem;transition:border-color .18s}
+.msg-wrap:focus-within{border-color:rgba(108,99,255,.4)}
+#msgInput{width:100%;background:transparent;border:none;outline:none;font-size:.845rem;color:var(--txt);resize:none;max-height:110px;overflow-y:auto;line-height:1.4}
+#msgInput::placeholder{color:var(--dim)}
+.send-btn{width:40px;height:40px;border-radius:var(--r);background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .18s,box-shadow .18s}
+.send-btn svg{width:17px;height:17px}
+.send-btn:hover{transform:scale(1.06);box-shadow:0 4px 16px rgba(108,99,255,.4)}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;display:none}
+.overlay.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--bdr2);border-radius:22px;width:100%;max-width:460px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);animation:mpop .22s cubic-bezier(.34,1.56,.64,1)}
+.modal.sm{max-width:350px}
+@keyframes mpop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.mhead h3{font-size:.95rem;font-weight:700}
+.mclose{background:none;border:none;color:var(--muted);font-size:.9rem;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.mclose:hover{background:var(--card);color:var(--txt)}
+.msearch{padding:.9rem 1.4rem;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.msearch input{width:100%;padding:.6rem .9rem;background:var(--card);border:1px solid var(--bdr);border-radius:50px;color:var(--txt);font-size:.82rem;outline:none;transition:border-color .18s}
+.msearch input:focus{border-color:var(--pri)}
+.msearch input::placeholder{color:var(--dim)}
+.mlist{flex:1;overflow-y:auto}
+.mu{display:flex;align-items:center;gap:.75rem;padding:.8rem 1.4rem;cursor:pointer;border-bottom:1px solid var(--bdr);transition:background .12s}
+.mu:hover{background:var(--card)}
+.mu-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.mu-name{font-weight:700;font-size:.845rem}
+.mu-sub{font-size:.72rem;color:var(--muted)}
+.mu-ai{background:rgba(62,207,207,.05)}
+.mu-ai:hover{background:rgba(62,207,207,.1)}
+.mbody{padding:1.4rem;overflow-y:auto}
+
+/* contact info */
+.ci-modal{text-align:center;padding:1.75rem}
+.ci-modal-av{width:76px;height:76px;border-radius:50%;margin:0 auto .9rem;display:flex;align-items:center;justify-content:center;font-size:2rem}
+.ci-modal-name{font-size:1.15rem;font-weight:700;margin-bottom:.2rem}
+.ci-modal-user{font-size:.78rem;color:var(--pri);margin-bottom:.5rem}
+.ci-modal-bio{font-size:.82rem;color:var(--muted);line-height:1.55;margin-bottom:1.25rem}
+.ci-chips{display:flex;justify-content:center;flex-wrap:wrap;gap:.4rem}
+.cichip{background:var(--card);border:1px solid var(--bdr);border-radius:50px;padding:.28rem .7rem;font-size:.7rem;color:var(--muted)}
+
+/* toast */
+.toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--bdr2);color:var(--txt);padding:.6rem 1.2rem;border-radius:50px;font-size:.8rem;font-weight:600;z-index:999;box-shadow:var(--shadow);pointer-events:none;opacity:0;transition:opacity .25s}
+.toast.on{opacity:1}
+
+/* ─── MOBILE ─── */
+@media(max-width:720px){
+  .sidebar{position:fixed;inset:0;z-index:40;width:100%;transform:translateX(-100%)}
+  .sidebar.mob-on{transform:translateX(0)}
+  .chat-area{width:100%}
+  .back-btn{display:flex!important}
+  .empty{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     AUTH SCREEN
+════════════════════════════════════════════ -->
+<div id="authScreen" class="screen">
+
+  <!-- Welcome -->
+  <div class="auth-box" id="pWelcome">
+    <div class="logo"><div class="logo-mark">💬</div><span class="logo-name">NexChat</span></div>
+    <h1 class="welcome-title">Connect.<br/>Chat.<br/><em>Always.</em></h1>
+    <p class="welcome-desc">A modern messaging experience with real user accounts and a built-in AI companion — ready whenever you are.</p>
+    <div class="btn-row">
+      <button class="btn-pri" onclick="showP('pRegister')">Create Account</button>
+      <button class="btn-out" onclick="showP('pLogin')">Sign In</button>
+    </div>
+    <div id="membersPreview"></div>
+  </div>
+
+  <!-- Register -->
+  <div class="auth-box panel" id="pRegister">
+    <div class="logo"><div class="logo-mark">💬</div><span class="logo-name">NexChat</span></div>
+    <p class="form-title">Create your account</p>
+    <p class="form-sub">Set up your profile to start chatting</p>
+
+    <div class="av-picker">
+      <div class="av-prev" id="regAvPrev"><span id="regAvEmoji">😊</span></div>
+      <p class="av-lbl">Pick an avatar</p>
+      <div class="emoji-grid" id="regEmojiGrid"></div>
+    </div>
+    <div class="color-row">
+      <p class="lbl">Profile colour</p>
+      <div class="cdots" id="regColorDots"></div>
+    </div>
+
+    <div class="fgroup">
+      <label>Display Name</label>
+      <input type="text" id="rName" placeholder="e.g. Snehal Mastud" maxlength="30"/>
+    </div>
+    <div class="fgroup">
+      <label>Username</label>
+      <div class="pfx-wrap"><span class="pfx">@</span><input type="text" id="rUser" placeholder="yourusername" maxlength="20"/></div>
+    </div>
+    <div class="fgroup">
+      <label>Status / Bio</label>
+      <input type="text" id="rBio" placeholder="Hey there! I'm on NexChat 👋" maxlength="60"/>
+    </div>
+    <div class="fgroup">
+      <label>Password</label>
+      <input type="password" id="rPass" placeholder="Create a password (min 4 chars)"/>
+    </div>
+    <div class="ferr" id="rErr"></div>
+    <button class="btn-pri" onclick="doRegister()">Create Account →</button>
+    <p class="fswitch">Already have an account? <a onclick="showP('pLogin')">Sign in</a></p>
+  </div>
+
+  <!-- Login -->
+  <div class="auth-box panel" id="pLogin">
+    <div class="logo"><div class="logo-mark">💬</div><span class="logo-name">NexChat</span></div>
+    <p class="form-title">Welcome back</p>
+    <p class="form-sub">Sign in to continue</p>
+
+    <div class="fgroup">
+      <label>Username</label>
+      <div class="pfx-wrap"><span class="pfx">@</span><input type="text" id="lUser" placeholder="yourusername"/></div>
+    </div>
+    <div class="fgroup">
+      <label>Password</label>
+      <input type="password" id="lPass" placeholder="Your password"/>
+    </div>
+    <div class="ferr" id="lErr"></div>
+    <button class="btn-pri" onclick="doLogin()">Sign In →</button>
+    <p class="fswitch">New here? <a onclick="showP('pRegister')">Create account</a></p>
+    <div id="qloginArea"></div>
+  </div>
+
+</div><!-- /authScreen -->
+
+<!-- ════════════════════════════════════════════
+     APP SCREEN
+════════════════════════════════════════════ -->
+<div id="appScreen" class="screen off">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-me" onclick="openProfileModal()">
+        <div class="sb-av" id="sbAv"></div>
+        <div class="sb-info">
+          <span class="sb-name" id="sbName"></span>
+          <span class="sb-bio" id="sbBio"></span>
+        </div>
+      </div>
+      <div class="sb-acts">
+        <button class="ib" onclick="openNewChat()" title="New chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </button>
+        <button class="ib" onclick="doLogout()" title="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="sb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchIn" placeholder="Search conversations…" oninput="renderChatList()"/>
+    </div>
+    <div class="sb-tabs">
+      <button class="stab on" id="tab-all" onclick="setTab('all')">All</button>
+      <button class="stab" id="tab-unread" onclick="setTab('unread')">Unread</button>
+      <button class="stab" id="tab-ai" onclick="setTab('ai')">AI</button>
+    </div>
+    <div class="chat-list" id="chatList"></div>
+  </aside>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area">
+    <!-- empty state -->
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">💬</div>
+      <h3>NexChat</h3>
+      <p>Select a chat from the sidebar or start a new conversation.</p>
+      <br/>
+      <button class="btn-pri btn-sm" onclick="openNewChat()">+ New Chat</button>
+    </div>
+
+    <!-- active chat (hidden until a chat is selected) -->
+    <div class="a-chat" id="activeChat" style="display:none">
+      <!-- topbar -->
+      <div class="topbar">
+        <button class="back-btn" onclick="closeMobileChat()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="tb-info" onclick="openChatInfo()">
+          <div class="tb-av" id="tbAv"></div>
+          <div>
+            <div class="tb-name" id="tbName"></div>
+            <div class="tb-sub" id="tbSub"></div>
+          </div>
+        </div>
+        <div class="tb-acts">
+          <button class="ib" onclick="clearActiveChat()" title="Clear chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- messages -->
+      <div class="msgs" id="msgsContainer"></div>
+      <!-- input -->
+      <div class="ibar">
+        <div class="emoji-wrap">
+          <button class="emoji-tog" onclick="toggleEP()">😊</button>
+          <div class="epicker" id="epicker"></div>
+        </div>
+        <div class="msg-wrap">
+          <textarea id="msgInput" rows="1" placeholder="Type a message…"
+            onkeydown="onMsgKey(event)" oninput="autoH(this)"></textarea>
+        </div>
+        <button class="send-btn" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /appScreen -->
+
+<!-- ════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════ -->
+
+<!-- New Chat -->
+<div class="overlay" id="newChatOv">
+  <div class="modal">
+    <div class="mhead"><h3>Start a Conversation</h3><button class="mclose" onclick="closeOv('newChatOv')">✕</button></div>
+    <div class="msearch"><input type="text" id="userSearch" placeholder="Search by name or @username…" oninput="renderUserSearch()"/></div>
+    <div class="mlist" id="userSearchList"></div>
+  </div>
+</div>
+
+<!-- Profile Edit -->
+<div class="overlay" id="profileOv">
+  <div class="modal">
+    <div class="mhead"><h3>Edit Profile</h3><button class="mclose" onclick="closeOv('profileOv')">✕</button></div>
+    <div class="mbody">
+      <div class="av-picker">
+        <div class="av-prev" id="editAvPrev"></div>
+        <p class="av-lbl">Pick an avatar</p>
+        <div class="emoji-grid" id="editEmojiGrid"></div>
+      </div>
+      <div class="color-row">
+        <p class="lbl">Profile colour</p>
+        <div class="cdots" id="editColorDots"></div>
+      </div>
+      <div class="fgroup"><label>Display Name</label><input type="text" id="eName" maxlength="30"/></div>
+      <div class="fgroup"><label>Status / Bio</label><input type="text" id="eBio" maxlength="60"/></div>
+      <button class="btn-pri" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Info -->
+<div class="overlay" id="chatInfoOv">
+  <div class="modal sm">
+    <div class="mhead"><h3>Contact Info</h3><button class="mclose" onclick="closeOv('chatInfoOv')">✕</button></div>
+    <div class="ci-modal" id="chatInfoBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  NEXCHAT  —  Complete Application
+// ════════════════════════════════════════════════════════════
+
+// ─── DATA ────────────────────────────────────────────────────
+const AI_ID = '__AI__';
+const SK = { users:'nc_users', msgs:'nc_msgs', me:'nc_me' };
+
+const EMOJIS = ['😊','😎','🤩','🥳','😴','🤓','👩‍💻','👨‍💻','🧑‍🎨','🦊','🐱','🐻','🦁','🐼','🐸','🦋','🌸','⚡','🔥','🌙','💎','🚀','🎮','🎯','🎵','☕','🍕','🌈','🧠','💡'];
+const COLORS = ['#6C63FF','#3ECFCF','#FF6B9D','#FF9A3C','#4CAF50','#E91E63','#2196F3','#9C27B0','#FF5722','#00BCD4'];
+const EPACK  = ['😊','😂','❤️','👍','🔥','✨','😎','🤔','👋','🎉','😍','🥳','💯','🙏','😅','🤣','💪','🌟','👏','😢','😮','🤯','🫶','💬','🚀','⚡','🎯','💡','🌈','☕'];
+
+// state
+let ME = null, ACTIVE = null, TAB = 'all';
+let rEmoji = EMOJIS[0], rColor = COLORS[0];
+let eEmoji = EMOJIS[0], eColor = COLORS[0];
+
+// storage
+const gu = ()=> JSON.parse(localStorage.getItem(SK.users)||'{}');
+const su = v=> localStorage.setItem(SK.users, JSON.stringify(v));
+const gm = ()=> JSON.parse(localStorage.getItem(SK.msgs)||'{}');
+const sm = v=> localStorage.setItem(SK.msgs,  JSON.stringify(v));
+const gme= ()=> { try{ return JSON.parse(localStorage.getItem(SK.me)||'null'); }catch(e){return null;} };
+const sme= v=> localStorage.setItem(SK.me, JSON.stringify(v));
+
+function ck(a,b){ return b===AI_ID ? `${a}:AI` : [a,b].sort().join(':'); }
+function getCM(a,b){ return (gm()[ck(a,b)])||[]; }
+function addCM(a,b,msg){ const m=gm(),k=ck(a,b); if(!m[k])m[k]=[]; m[k].push(msg); sm(m); }
+
+// ─── BOOT ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', ()=>{
+  buildRegGrids(); buildEP();
+  // Try auto-login
+  const saved = gme();
+  if(saved){
+    const users = gu();
+    if(users[saved.username]){
+      ME = users[saved.username];
+      startApp();
+      return;
+    }
+  }
+  // Show welcome
+  show('authScreen'); hide('appScreen');
+  showP('pWelcome');
+  renderMembersPreview();
+});
+
+// ─── AUTH PANELS ─────────────────────────────────────────────
+function showP(id){
+  ['pWelcome','pRegister','pLogin'].forEach(p=>{
+    const el = document.getElementById(p);
+    if(el){ el.classList.remove('panel'); el.style.display = p===id ? 'block' : 'none'; }
+  });
+  if(id==='pLogin') renderQLogin();
+  renderMembersPreview();
+}
+
+function renderMembersPreview(){
+  const users = Object.values(gu());
+  const el = document.getElementById('membersPreview');
+  if(!el) return;
+  if(!users.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="members-preview">
+    <p class="lbl">Already on NexChat</p>
+    <div class="member-chips">${users.slice(0,6).map(u=>`
+      <div class="mchip">
+        <div class="mchip-av" style="background:${u.color}">${u.emoji}</div>
+        <span class="mchip-name">${esc(u.name)}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderQLogin(){
+  const users = Object.values(gu());
+  const el = document.getElementById('qloginArea');
+  if(!el||!users.length){ if(el) el.innerHTML=''; return; }
+  el.innerHTML = `<div class="qlogin">
+    <p class="lbl">Quick login</p>
+    ${users.slice(0,4).map(u=>`
+    <button class="ql-btn" onclick="quickLogin('${u.username}')">
+      <div class="ql-av" style="background:${u.color}">${u.emoji}</div>
+      <div><div class="ql-name">${esc(u.name)}</div><div class="ql-user">@${u.username}</div></div>
+    </button>`).join('')}
+  </div>`;
+}
+
+function quickLogin(uname){
+  const u = gu()[uname];
+  if(!u) return;
+  ME=u; sme(u); startApp();
+}
+
+// ─── REGISTER ────────────────────────────────────────────────
+function doRegister(){
+  const name = v('rName').trim();
+  const username = v('rUser').trim().toLowerCase().replace(/[^a-z0-9_]/g,'');
+  const bio  = v('rBio').trim() || "Hey there! I'm on NexChat 👋";
+  const pass = v('rPass');
+  const err  = document.getElementById('rErr');
+  err.classList.remove('on'); err.textContent='';
+
+  if(!name||name.length<2) return se(err,'Please enter a display name (min 2 chars).');
+  if(!username||username.length<3) return se(err,'Username must be at least 3 characters (a-z, 0-9, _).');
+  if(!pass||pass.length<4) return se(err,'Password must be at least 4 characters.');
+
+  const users = gu();
+  if(users[username]) return se(err,'That username is already taken — try another!');
+
+  const user = { name, username, bio, password:pass, emoji:rEmoji, color:rColor, joinedAt:Date.now() };
+  users[username]=user; su(users);
+  ME=user; sme(user);
+  toast(`Welcome to NexChat, ${name}! 🎉`);
+  startApp();
+}
+
+// ─── LOGIN ────────────────────────────────────────────────────
+function doLogin(){
+  const username = v('lUser').trim().toLowerCase();
+  const pass = v('lPass');
+  const err  = document.getElementById('lErr');
+  err.classList.remove('on'); err.textContent='';
+
+  if(!username||!pass) return se(err,'Please fill in both fields.');
+  const users=gu(), user=users[username];
+  if(!user) return se(err,'No account found with that username.');
+  if(user.password!==pass) return se(err,'Incorrect password. Please try again.');
+
+  ME=user; sme(user);
+  toast(`Welcome back, ${user.name}! 👋`);
+  startApp();
+}
+
+function se(el,msg){ el.textContent=msg; el.classList.add('on'); }
+
+// ─── START APP ────────────────────────────────────────────────
+function startApp(){
+  hide('authScreen'); show('appScreen');
+
+  // Sidebar avatar
+  setAv('sbAv', ME.emoji, ME.color);
+  document.getElementById('sbName').textContent = ME.name;
+  document.getElementById('sbBio').textContent  = ME.bio;
+
+  renderChatList();
+
+  // On first ever login, open AI chat automatically
+  const aiMsgs = getCM(ME.username, AI_ID);
+  if(!aiMsgs.length){
+    openChat(AI_ID);
+  } else {
+    // Show empty state
+    showEmpty();
+  }
+}
+
+function doLogout(){
+  ME=null; ACTIVE=null;
+  localStorage.removeItem(SK.me);
+  hide('appScreen'); show('authScreen');
+  showP('pWelcome');
+  showEmpty();
+}
+
+// ─── CHAT LIST ────────────────────────────────────────────────
+function renderChatList(){
+  if(!ME) return;
+  const users=gu(), msgs=gm(), me=ME.username;
+  const q = (document.getElementById('searchIn')||{}).value||'';
+  let list=[];
+
+  // AI entry
+  const aiMs = getCM(me,AI_ID);
+  const aiLast = aiMs[aiMs.length-1];
+  list.push({ id:AI_ID, type:'ai', name:'NexChat AI', sub:'Your AI assistant', emoji:'🤖', color:'#3ECFCF',
+    lastMsg: aiLast?.text||'Start chatting!', lastTs: aiLast?.ts||0, unread:0 });
+
+  // Real users
+  Object.values(users).forEach(u=>{
+    if(u.username===me) return;
+    const k = [me,u.username].sort().join(':');
+    const convo = msgs[k]||[];
+    const last = convo[convo.length-1];
+    const unread = convo.filter(m=>m.from!==me&&!m.read).length;
+    list.push({ id:u.username, type:'user', name:u.name, sub:u.bio, emoji:u.emoji, color:u.color,
+      lastMsg: last?.text||'No messages yet', lastTs: last?.ts||0, unread });
+  });
+
+  list.sort((a,b)=>b.lastTs-a.lastTs);
+  if(TAB==='unread') list=list.filter(c=>c.unread>0);
+  if(TAB==='ai')     list=list.filter(c=>c.type==='ai');
+  if(q) list=list.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())||c.id.toLowerCase().includes(q.toLowerCase()));
+
+  const el=document.getElementById('chatList');
+  if(!list.length){ el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.82rem">No chats found</div>'; return; }
+
+  el.innerHTML = list.map(c=>`
+    <div class="ci${ACTIVE===c.id?' on':''}" onclick="openChat('${c.id}')">
+      <div class="ci-av" style="background:${c.color}">${c.emoji}<div class="dot"></div></div>
+      <div class="ci-body">
+        <div class="ci-top">
+          <span class="ci-name">${esc(c.name)}${c.type==='ai'?'<span class="ai-tag">AI</span>':''}</span>
+          <span class="ci-time">${c.lastTs?fmtTime(c.lastTs):''}</span>
+        </div>
+        <div class="ci-prev">${esc(c.lastMsg.slice(0,48))}${c.lastMsg.length>48?'…':''}
+          ${c.unread?`<span class="ubadge">${c.unread}</span>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function setTab(t){
+  TAB=t;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+t).classList.add('on');
+  renderChatList();
+}
+
+// ─── OPEN CHAT ────────────────────────────────────────────────
+function openChat(targetId){
+  ACTIVE = targetId;
+  const users=gu();
+  let target;
+  if(targetId===AI_ID){
+    target={ name:'NexChat AI', bio:'🤖 AI powered · always online', emoji:'🤖', color:'#3ECFCF', username:AI_ID };
+  } else {
+    target=users[targetId];
+    if(!target){ toast('User not found'); return; }
+  }
+
+  // Mark read
+  const ms=gm(), k=ck(ME.username,targetId);
+  if(ms[k]){ ms[k].forEach(m=>{ if(m.from!==ME.username) m.read=true; }); sm(ms); }
+
+  // Topbar
+  setAv('tbAv', target.emoji, target.color);
+  document.getElementById('tbName').textContent = target.name;
+  document.getElementById('tbSub').textContent  = targetId===AI_ID ? '🤖 AI-powered · Always online' : `@${target.username} · ${esc(target.bio)}`;
+
+  // Show active chat, hide empty
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('activeChat').style.display = 'flex';
+
+  // Mobile: show chat area
+  document.getElementById('sidebar').classList.remove('mob-on');
+
+  renderMsgs();
+  renderChatList();
+  const inp=document.getElementById('msgInput');
+  inp.value=''; autoH(inp); inp.focus();
+}
+
+function showEmpty(){
+  ACTIVE=null;
+  document.getElementById('emptyState').style.display='flex';
+  document.getElementById('activeChat').style.display='none';
+  renderChatList();
+}
+
+function closeMobileChat(){
+  document.getElementById('sidebar').classList.add('mob-on');
+  showEmpty();
+}
+
+// ─── RENDER MESSAGES ─────────────────────────────────────────
+function renderMsgs(){
+  if(!ACTIVE) return;
+  const convo=getCM(ME.username,ACTIVE);
+  const users=gu();
+  const el=document.getElementById('msgsContainer');
+  if(!convo.length){
+    el.innerHTML=`<div style="text-align:center;color:var(--muted);margin-top:3rem;font-size:.85rem">No messages yet. Say hello! 👋</div>`;
+    return;
+  }
+  let html='', lastDate='';
+  convo.forEach(msg=>{
+    const d=new Date(msg.ts).toDateString();
+    if(d!==lastDate){ lastDate=d; html+=`<div class="date-div"><span>${fmtDate(msg.ts)}</span></div>`; }
+    const isOut = msg.from===ME.username;
+    const isAI  = msg.from===AI_ID;
+    const sender = isAI ? {emoji:'🤖',color:'#3ECFCF',name:'NexChat AI'} : users[msg.from]||{emoji:'😊',color:'#6C63FF',name:'?'};
+    const cls   = isOut?'out':isAI?'ai':'in';
+    html+=`<div class="msg-row ${isOut?'out':'in'}">
+      ${!isOut?`<div class="msg-av" style="background:${sender.color}">${sender.emoji}</div>`:''}
+      <div>
+        ${!isOut&&!isAI?`<div class="bsender">${esc(sender.name)}</div>`:''}
+        <div class="bubble ${cls}">
+          ${esc(msg.text)}
+          <div class="bmeta">
+            <span class="btime">${fmtShort(msg.ts)}</span>
+            ${isOut?'<span class="btick">✓✓</span>':''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+  el.scrollTop=el.scrollHeight;
+}
+
+// ─── SEND MESSAGE ────────────────────────────────────────────
+async function sendMsg(){
+  const inp=document.getElementById('msgInput');
+  const text=inp.value.trim();
+  if(!text||!ACTIVE) return;
+  inp.value=''; autoH(inp); closeEP();
+
+  const msg={ id:Date.now(), from:ME.username, text, ts:Date.now(), read:false };
+  addCM(ME.username, ACTIVE, msg);
+  renderMsgs(); renderChatList();
+
+  if(ACTIVE===AI_ID){
+    showTyping();
+    const reply=await aiReply(text);
+    hideTyping();
+    addCM(ME.username, AI_ID, { id:Date.now()+1, from:AI_ID, text:reply, ts:Date.now(), read:false });
+    renderMsgs(); renderChatList();
+  }
+}
+
+function onMsgKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); }
+}
+function autoH(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+
+// ─── AI ──────────────────────────────────────────────────────
+const AI_SYS = `You are NexChat AI — a friendly, witty, helpful chat assistant built inside the NexChat messaging app. Be warm, conversational, and concise (2-4 sentences). Use 1-2 emojis occasionally. You can discuss any topic, help with tasks, give advice, write code, or just chat.`;
+
+async function aiReply(userText){
+  const history = getCM(ME.username,AI_ID).slice(-12);
+  const msgs = history.slice(0,-1).map(m=>({ role:m.from===AI_ID?'assistant':'user', content:m.text }));
+  msgs.push({ role:'user', content:userText });
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:500, system:AI_SYS, messages:msgs })
+    });
+    const d=await r.json();
+    if(d?.content?.[0]?.text) return d.content[0].text;
+  }catch(e){}
+  return localAI(userText);
+}
+
+function localAI(t){
+  t=t.toLowerCase();
+  if(/hi|hello|hey|hola|sup/.test(t)) return `Hey ${ME.name}! 👋 Great to hear from you. What's on your mind?`;
+  if(/how are you|how r u|how do you/.test(t)) return `I'm running at 100%, thanks for asking! 😄 How about you?`;
+  if(/who are you|what are you|your name/.test(t)) return `I'm NexChat AI — your built-in assistant. I can chat, help with tasks, answer questions, write things, and more! Just ask 🤖`;
+  if(/joke/.test(t)) return `Why do programmers prefer dark mode? Because light attracts bugs! 😄`;
+  if(/time|date/.test(t)) return `On your device it's currently ${new Date().toLocaleString()} ⏰`;
+  if(/thank/.test(t)) return `You're welcome! Happy to help 😊`;
+  if(/bye|goodbye|cya/.test(t)) return `Bye for now, ${ME.name}! 👋 Come back anytime.`;
+  if(/help|what can you/.test(t)) return `I can chat, answer questions, help write things, give advice, tell jokes, and more! Just ask me anything 😊`;
+  if(/weather/.test(t)) return `I can't check real-time weather right now, but your phone's weather app would know! 🌤️`;
+  if(/nexchat/.test(t)) return `NexChat is the app you're in! It has user accounts, real messaging, and me — your AI assistant 🚀`;
+  if(/love|like you/.test(t)) return `Aww, that's sweet! I'm always here for you 💙`;
+  const fb=['That\'s interesting, tell me more! 🤔','I hear you! What else is on your mind? 😊','Great point! Let\'s keep chatting 💬','Hmm, what do you think about it?','I love chatting! Tell me more ✨'];
+  return fb[Math.floor(Math.random()*fb.length)];
+}
+
+function showTyping(){
+  const el=document.getElementById('msgsContainer');
+  el.insertAdjacentHTML('beforeend',`<div class="typing-row" id="aiTyping">
+    <div class="msg-av" style="background:#3ECFCF">🤖</div>
+    <div class="tbubble"><div class="td"></div><div class="td"></div><div class="td"></div></div>
+  </div>`);
+  el.scrollTop=el.scrollHeight;
+}
+function hideTyping(){ const e=document.getElementById('aiTyping'); if(e)e.remove(); }
+
+// ─── EMOJI PICKER ────────────────────────────────────────────
+function buildEP(){
+  document.getElementById('epicker').innerHTML=EPACK.map(e=>`<div class="ep" onclick="insertE('${e}')">${e}</div>`).join('');
+}
+function toggleEP(){ document.getElementById('epicker').classList.toggle('on'); }
+function closeEP(){ document.getElementById('epicker').classList.remove('on'); }
+function insertE(e){ const i=document.getElementById('msgInput'); i.value+=e; i.focus(); autoH(i); }
+
+// ─── AVATAR/COLOR BUILDERS ───────────────────────────────────
+function buildRegGrids(){
+  // reg
+  const rg=document.getElementById('regEmojiGrid');
+  if(rg) rg.innerHTML=EMOJIS.map(e=>`<div class="eg-item${e===rEmoji?' sel':''}" onclick="pickRE('${e}')">${e}</div>`).join('');
+  const rc=document.getElementById('regColorDots');
+  if(rc) rc.innerHTML=COLORS.map((c,i)=>`<div class="cdot${i===0?' sel':''}" style="background:${c}" onclick="pickRC('${c}',this)"></div>`).join('');
+  document.getElementById('regAvPrev').style.background=rColor;
+}
+
+function pickRE(e){
+  rEmoji=e; document.getElementById('regAvEmoji').textContent=e;
+  document.querySelectorAll('#regEmojiGrid .eg-item').forEach(el=>el.classList.toggle('sel',el.textContent===e));
+}
+function pickRC(c,el){
+  rColor=c; document.getElementById('regAvPrev').style.background=c;
+  document.querySelectorAll('#regColorDots .cdot').forEach(d=>d.classList.remove('sel')); el.classList.add('sel');
+}
+
+function buildEditGrids(){
+  const eg=document.getElementById('editEmojiGrid');
+  if(eg) eg.innerHTML=EMOJIS.map(e=>`<div class="eg-item${e===eEmoji?' sel':''}" onclick="pickEE('${e}')">${e}</div>`).join('');
+  const ec=document.getElementById('editColorDots');
+  if(ec) ec.innerHTML=COLORS.map(c=>`<div class="cdot${c===eColor?' sel':''}" style="background:${c}" onclick="pickEC('${c}',this)"></div>`).join('');
+}
+function pickEE(e){
+  eEmoji=e; const p=document.getElementById('editAvPrev'); p.textContent=e;
+  document.querySelectorAll('#editEmojiGrid .eg-item').forEach(el=>el.classList.toggle('sel',el.textContent===e));
+}
+function pickEC(c,el){
+  eColor=c; document.getElementById('editAvPrev').style.background=c;
+  document.querySelectorAll('#editColorDots .cdot').forEach(d=>d.classList.remove('sel')); el.classList.add('sel');
+}
+
+// ─── NEW CHAT MODAL ──────────────────────────────────────────
+function openNewChat(){
+  document.getElementById('userSearch').value='';
+  renderUserSearch();
+  openOv('newChatOv');
+  document.getElementById('sidebar').classList.add('mob-on');
+}
+function renderUserSearch(){
+  const q=(document.getElementById('userSearch').value||'').toLowerCase();
+  const users=gu();
+  let html=`<div class="mu mu-ai" onclick="startChat('${AI_ID}');closeOv('newChatOv')">
+    <div class="mu-av" style="background:#3ECFCF">🤖</div>
+    <div><div class="mu-name">NexChat AI <span class="ai-tag">AI</span></div><div class="mu-sub">Your intelligent assistant · Always available</div></div>
+  </div>`;
+  const list=Object.values(users).filter(u=>u.username!==ME?.username&&(!q||u.name.toLowerCase().includes(q)||u.username.includes(q)));
+  if(!list.length&&q){ html+=`<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.82rem">No users found for "<b>${esc(q)}</b>"</div>`; }
+  else html+=list.map(u=>`<div class="mu" onclick="startChat('${u.username}');closeOv('newChatOv')">
+    <div class="mu-av" style="background:${u.color}">${u.emoji}</div>
+    <div><div class="mu-name">${esc(u.name)}</div><div class="mu-sub">@${u.username} · ${esc(u.bio)}</div></div>
+  </div>`).join('');
+  document.getElementById('userSearchList').innerHTML=html;
+}
+function startChat(id){ openChat(id); }
+
+// ─── PROFILE ─────────────────────────────────────────────────
+function openProfileModal(){
+  eEmoji=ME.emoji; eColor=ME.color;
+  buildEditGrids();
+  const p=document.getElementById('editAvPrev'); p.textContent=eEmoji; p.style.background=eColor;
+  document.getElementById('eName').value=ME.name;
+  document.getElementById('eBio').value=ME.bio;
+  openOv('profileOv');
+}
+function saveProfile(){
+  const name=document.getElementById('eName').value.trim();
+  const bio =document.getElementById('eBio').value.trim();
+  if(!name){ toast('Name cannot be empty'); return; }
+  ME.name=name; ME.bio=bio||ME.bio; ME.emoji=eEmoji; ME.color=eColor;
+  const users=gu(); users[ME.username]=ME; su(users); sme(ME);
+  setAv('sbAv',ME.emoji,ME.color);
+  document.getElementById('sbName').textContent=ME.name;
+  document.getElementById('sbBio').textContent=ME.bio;
+  if(ACTIVE) renderChatList();
+  closeOv('profileOv'); toast('Profile updated! ✨');
+}
+
+// ─── CHAT INFO ───────────────────────────────────────────────
+function openChatInfo(){
+  if(!ACTIVE) return;
+  const users=gu();
+  let t;
+  if(ACTIVE===AI_ID) t={name:'NexChat AI',username:'nexchat.ai',bio:'Your intelligent AI assistant, always ready.',emoji:'🤖',color:'#3ECFCF',joinedAt:Date.now()};
+  else { t=users[ACTIVE]; if(!t) return; }
+  document.getElementById('chatInfoBody').innerHTML=`
+    <div class="ci-modal-av" style="background:${t.color}">${t.emoji}</div>
+    <div class="ci-modal-name">${esc(t.name)}</div>
+    <div class="ci-modal-user">@${t.username||ACTIVE}</div>
+    <div class="ci-modal-bio">${esc(t.bio)}</div>
+    <div class="ci-chips">
+      ${ACTIVE===AI_ID?'<span class="cichip">🤖 AI</span><span class="cichip">Always Online</span>':`<span class="cichip">Member since ${new Date(t.joinedAt||Date.now()).toLocaleDateString()}</span>`}
+    </div>`;
+  openOv('chatInfoOv');
+}
+
+// ─── CLEAR CHAT ──────────────────────────────────────────────
+function clearActiveChat(){
+  if(!ACTIVE) return;
+  const ms=gm(), k=ck(ME.username,ACTIVE); ms[k]=[]; sm(ms);
+  renderMsgs(); renderChatList(); toast('Chat cleared');
+}
+
+// ─── MODAL HELPERS ───────────────────────────────────────────
+function openOv(id){ document.getElementById(id).classList.add('on'); }
+function closeOv(id){ document.getElementById(id).classList.remove('on'); }
+document.addEventListener('click',e=>{
+  ['newChatOv','profileOv','chatInfoOv'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&e.target===el) closeOv(id);
+  });
+  const ep=document.getElementById('epicker');
+  if(!e.target.closest('.emoji-wrap')) ep.classList.remove('on');
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    ['newChatOv','profileOv','chatInfoOv'].forEach(closeOv);
+    closeEP();
+  }
+});
+
+// ─── UTILS ───────────────────────────────────────────────────
+function setAv(id,emoji,color){ const el=document.getElementById(id); el.textContent=emoji; el.style.background=color; }
+function show(id){ document.getElementById(id).classList.remove('off'); }
+function hide(id){ document.getElementById(id).classList.add('off'); }
+function v(id){ return document.getElementById(id).value; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtTime(ts){
+  const diff=Date.now()-ts;
+  if(diff<86400000) return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  if(diff<604800000) return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ts).getDay()];
+  return new Date(ts).toLocaleDateString([],{day:'2-digit',month:'2-digit'});
+}
+function fmtShort(ts){ return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(ts){
+  const d=new Date(ts), now=new Date();
+  if(d.toDateString()===now.toDateString()) return 'Today';
+  const y=new Date(now); y.setDate(y.getDate()-1);
+  if(d.toDateString()===y.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
+}
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),2600);
+}
+</script>
+</body>
+</html>
